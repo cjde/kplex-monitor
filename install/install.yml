@@ -35,4 +35,10 @@
       user: root 
       job:  "{{ RUN }}/boot_test.sh" 
 
-
+  - name: Install kplex system files
+    copy:
+      src: "{{ REPO }}/etc_kplex.conf"
+      dest: /etc/kplex.conf 
+      mode: '0644'
+      owner: root
+      group: root
