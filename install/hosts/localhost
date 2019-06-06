@@ -1,0 +1,8 @@
+# Rpi that is listening to the Kplex server and processing incomming compass sentences  
+[nema-mux]
+localhost ansible_connection=local
+
+# RPi that is attached to the remote compass display
+[compass]
+localhost ansible_connection=local
+

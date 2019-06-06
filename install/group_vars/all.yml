@@ -1,0 +1,6 @@
+---
+HOME: "/home/pi/kplex-monitor"
+REPO: "{{ HOME }}/repo"
+LOG: "{{ HOME }}/log"
+RUN: "{{ HOME }}/run"
+
