@@ -1,0 +1,13 @@
+# /etc/systemd/system/shutdown.service
+[Service]
+ExecStart=/usr/bin/python /home/pi/kplex-monitor/run/shutdown.py
+WorkingDirectory=/tmp
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=pishutdown
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,20 @@
+# /etc/systemd/system/kplex-monitor.service
+[Unit]
+Description="Monitor instrument activity in kplex"
+Requires=kplex.service
+After=network-online.target remote-fs.target systemd-journald-dev-log.socket kplex.service
+
+[Service]
+ExecStart=/usr/bin/python /home/pi/kplex-monitor/run/kplex_monitor.py
+Type=simple
+WorkingDirectory=/home/pi/kplex-monitor/run
+Restart=always
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=kplex-monitor
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+

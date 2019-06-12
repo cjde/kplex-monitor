@@ -14,18 +14,19 @@
     copy: 
       src:  "{{ REPO }}/{{ item.src }}"
       dest: "{{ RUN }}/{{ item.dest }}"
-      owner : pi 
-      group : pi
+      owner : "{{ item.o }}" 
+      group : "{{ item.g }}"
       mode : "{{ item.mode }}"
     with_items:
-      - { src: 'heading_calc.py',  dest: 'heading_calc.py',  mode: '0655' }
-      - { src: 'SevenSeg.py',      dest: 'SevenSeg.py',      mode: '0655' }
-      - { src: 'kplex_monitor.py', dest: 'kplex_monitor.py', mode: '0655' }
-      - { src: 'boot_test.sh',     dest: 'boot_test.sh',     mode: '0655' } 
-      - { src: 'boot_test.txt',    dest: 'boot_test.txt',    mode: '0644' } 
-      - { src: 'Run_test.sh',      dest: 'Run_test.sh',      mode: '0655' } 
-      - { src: 'environs.sh',      dest: 'environs.sh',      mode: '0655' } 
-      - { src: 'kplex_server_simulator.sh', dest: 'kplex_server_simulator.sh',   mode: '0655'} 
+      - { src: 'heading_calc.py',  dest: 'heading_calc.py',  mode: '0655', o: 'pi',   g: 'pi' }
+      - { src: 'SevenSeg.py',      dest: 'SevenSeg.py',      mode: '0655', o: 'pi',   g: 'pi' }
+      - { src: 'kplex-monitor.py', dest: 'kplex-monitor.py', mode: '0655', o: 'pi',   g: 'pi' }
+      - { src: 'boot_test.sh',     dest: 'boot_test.sh',     mode: '0655', o: 'pi',   g: 'pi' } 
+      - { src: 'boot_test.txt',    dest: 'boot_test.txt',    mode: '0644', o: 'pi',   g: 'pi' } 
+      - { src: 'Run_test.sh',      dest: 'Run_test.sh',      mode: '0655', o: 'pi',   g: 'pi' } 
+      - { src: 'environs.sh',      dest: 'environs.sh',      mode: '0655', o: 'pi',   g: 'pi' } 
+      - { src: 'shutdown.py,       dest: 'shutdown.py',      mode: '0655', o: 'root', g: 'root' } 
+      - { src: 'kplex_server_simulator.sh', dest: 'kplex_server_simulator.sh', mode: '0655', o: 'pi', g: 'pi'} 
   
   - name: Install boot diag script in cron 
     cron: 
@@ -35,10 +36,33 @@
       user: root 
       job:  "{{ RUN }}/boot_test.sh" 
 
-  - name: Install kplex system files
+  - name: Install kplex system config files
     copy:
       src: "{{ REPO }}/etc_kplex.conf"
       dest: /etc/kplex.conf 
       mode: '0644'
       owner: root
       group: root
+
+  - name: install service daemons 
+    copy:
+      src:  "{{ REPO }}/{{ item.file }}"
+      dest: "/etc/systemd/system/{{ item.file }}"
+      owner : root 
+      group : root
+      mode : "{{ item.mode }}"
+    with_items:
+      - { file: 'kplex-monitor.service',  mode: '0655' }
+      - { file: 'shutdown.service',  mode: '0655' }
+
+  - name: Enable shutdown button monitoring and start services, dont start it yet  
+    service: 
+      name:  shutdown
+      daemon_reload: yes 
+      enabled: yes
+      state: stopped 
+    service: 
+      name: kplex-monitor 
+      daemon_reload: yes 
+      enabled:  yes
+      state: stopped 
