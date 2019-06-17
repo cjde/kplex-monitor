@@ -28,6 +28,11 @@
       - { src: 'shutdown.py,       dest: 'shutdown.py',      mode: '0655', o: 'root', g: 'root' } 
       - { src: 'kplex_server_simulator.sh', dest: 'kplex_server_simulator.sh', mode: '0655', o: 'pi', g: 'pi'} 
   
+  - name Instal kplex server 
+    paclage: 
+       name: kplex 
+       state: present 
+
   - name: Install boot diag script in cron 
     cron: 
       name: "Feed example compass data to kplex server on boot for diagnostics"
@@ -43,7 +48,7 @@
       mode: '0644'
       owner: root
       group: root
-
+  
   - name: install service daemons 
     copy:
       src:  "{{ REPO }}/{{ item.file }}"
@@ -66,3 +71,10 @@
       daemon_reload: yes 
       enabled:  yes
       state: stopped 
+
+  - name: Start up kplex if neeed 
+    service: 
+      name: kplex 
+      enabled: yes 
+      state: started
+ 
