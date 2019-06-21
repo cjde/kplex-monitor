@@ -5,33 +5,68 @@
 #
 ---
 - hosts: localhost
+  gather_facts: True
   vars:
     http_port: 80
     max_clients: 200
   remote_user: root
+
   tasks:
   - name: install files from repo into runtime location
-    copy: 
+    copy:
       src:  "{{ REPO }}/{{ item.src }}"
       dest: "{{ RUN }}/{{ item.dest }}"
-      owner : "{{ item.o }}" 
-      group : "{{ item.g }}"
       mode : "{{ item.mode }}"
+      owner : "{{ item.o }}"
+      group : "{{ item.g }}"
     with_items:
       - { src: 'heading_calc.py',  dest: 'heading_calc.py',  mode: '0655', o: 'pi',   g: 'pi' }
       - { src: 'SevenSeg.py',      dest: 'SevenSeg.py',      mode: '0655', o: 'pi',   g: 'pi' }
       - { src: 'kplex-monitor.py', dest: 'kplex-monitor.py', mode: '0655', o: 'pi',   g: 'pi' }
-      - { src: 'boot_test.sh',     dest: 'boot_test.sh',     mode: '0655', o: 'pi',   g: 'pi' } 
-      - { src: 'boot_test.txt',    dest: 'boot_test.txt',    mode: '0644', o: 'pi',   g: 'pi' } 
-      - { src: 'Run_test.sh',      dest: 'Run_test.sh',      mode: '0655', o: 'pi',   g: 'pi' } 
-      - { src: 'environs.sh',      dest: 'environs.sh',      mode: '0655', o: 'pi',   g: 'pi' } 
-      - { src: 'shutdown.py,       dest: 'shutdown.py',      mode: '0655', o: 'root', g: 'root' } 
-      - { src: 'kplex_server_simulator.sh', dest: 'kplex_server_simulator.sh', mode: '0655', o: 'pi', g: 'pi'} 
+      - { src: 'boot_test.sh',     dest: 'boot_test.sh',     mode: '0655', o: 'pi',   g: 'pi' }
+      - { src: 'boot_test.txt',    dest: 'boot_test.txt',    mode: '0644', o: 'pi',   g: 'pi' }
+      - { src: 'Run_test.sh',      dest: 'Run_test.sh',      mode: '0655', o: 'pi',   g: 'pi' }
+      - { src: 'environs.sh',      dest: 'environs.sh',      mode: '0655', o: 'pi',   g: 'pi' }
+      - { src: 'kplex_server_simulator.sh', dest: 'kplex_server_simulator.sh', mode: '0655', o: 'pi', g: 'pi'}
+
+  - name: install files ad root from repo into runtime location
+    become: true 
+    copy:
+      src:  "{{ REPO }}/{{ item.src }}"
+      dest: "{{ RUN }}/{{ item.dest }}"
+      mode : "{{ item.mode }}"
+      owner : "{{ item.o }}"
+      group : "{{ item.g }}"
+    with_items: 
+      - { src: 'shutdown.py',      dest: 'shutdown.py',      mode: '0655', o: 'root', g: 'root' }
+
   
-  - name Instal kplex server 
-    paclage: 
-       name: kplex 
-       state: present 
+# ansible_architecture": "armv7l", "{{ REPO }}/kplex_1.4-1_armhf.deb"
+# ansible_architecture": "x86_64", "{{ REPO }}/kplex_1.4-1_amd64.deb"
+# {{ ansible_facts['ansible_architecture'] }}
+
+  - name: "Instal kplex server on ARM" 
+    become: true 
+    apt:
+      deb: "{{ REPO }}/kplex_1.4-1_armhf.deb" 
+    when: (  ansible_architecture   == "armv7l" ) 
+
+  - name: "Instal kplex server on AMD" 
+    become: true 
+    apt:
+      deb: "{{ REPO }}/kplex_1.4-1_amd64.deb" 
+    when: (  ansible_architecture   == "x86_64" ) 
+
+
+#  - name: Instal kplex server based on system archeture 
+#    apt:
+#      deb: "{{ item.file }}"
+#    when 
+#      - ansible_facts['ansible_architecture'] == "{{ item.arch }}"
+#    with_items:
+#      - {arch: "armv7l", file: "{{ REPO }}/kplex_1.4-1_armhf.deb" }
+#      - {arch: "x86_64", file: "{{ REPO }}/kplex_1.4-1_amd64.deb" }
+#    become: true
 
   - name: Install boot diag script in cron 
     cron: 
@@ -40,6 +75,7 @@
       cron_file: diag_boot
       user: root 
       job:  "{{ RUN }}/boot_test.sh" 
+    become: true
 
   - name: Install kplex system config files
     copy:
@@ -48,6 +84,7 @@
       mode: '0644'
       owner: root
       group: root
+    become: true
   
   - name: install service daemons 
     copy:
@@ -59,6 +96,7 @@
     with_items:
       - { file: 'kplex-monitor.service',  mode: '0655' }
       - { file: 'shutdown.service',  mode: '0655' }
+    become: true
 
   - name: Enable shutdown button monitoring and start services, dont start it yet  
     service: 
@@ -66,15 +104,19 @@
       daemon_reload: yes 
       enabled: yes
       state: stopped 
+    become: true
+
     service: 
       name: kplex-monitor 
       daemon_reload: yes 
       enabled:  yes
       state: stopped 
+    become: true
 
   - name: Start up kplex if neeed 
     service: 
       name: kplex 
       enabled: yes 
       state: started
+    become: true
  
