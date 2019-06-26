@@ -12,6 +12,14 @@
   remote_user: root
 
   tasks:
+  - name: Create the run  directory
+    file:
+      path: "{{ RUN }}"
+      state: directory
+      owner : "pi"
+      group : "pi"
+    become: true
+
   - name: install files from repo into runtime location
     copy:
       src:  "{{ REPO }}/{{ item.src }}"
