@@ -75,6 +75,8 @@
     file:
       path: /var/log/kplex
       state: directory
+      owner : "root"
+      group : "adm"
     become: true
   
   - name: install service daemons 
